@@ -70,7 +70,7 @@ Text: %s\r
 
     /**
      * Socket name to connect
-     * @var    string   
+     * @var    string
      * @access protected
      */
     protected $_socket_name;
@@ -84,14 +84,14 @@ Text: %s\r
 
     /**
      * Options
-     * @var    array    
+     * @var    array
      * @access protected
      */
     protected $_options;
 
     /**
      * Default opsions
-     * @var    array    
+     * @var    array
      * @access protected
      */
     protected $_options_default = array(
@@ -103,7 +103,7 @@ Text: %s\r
      *
      * @param  string  $socketname socket name (defined in tiarra.conf)
      * @param  array   $options    options array
-     * @access public 
+     * @access public
      */
     public function __construct($socketname, Array $options = array())
     {
@@ -160,37 +160,39 @@ Text: %s\r
      * @param  string                      $channel
      * @param  string                      $text
      * @param  boolean                     $use_notice
-     * @return void                       
-     * @access public                     
+     * @return void
+     * @access public
      * @throws Net_Socket_Tiarra_Exception Exception
      */
     public function message($channel, $text, $use_notice = false)
     {
-        $this->_socket_resource = fsockopen("unix:///tmp/tiarra-control/" . $this->_socket_name);
+        foreach ($this->strSplit($text, 300) as $k => $t) {
+            $this->_socket_resource = fsockopen("unix:///tmp/tiarra-control/" . $this->_socket_name);
 
-        if (!$this->_socket_resource) {
-            throw new Net_Socket_Tiarra_Exception("error: cannot connect tiarra's socket");
+            if (!$this->_socket_resource) {
+                throw new Net_Socket_Tiarra_Exception("error: cannot connect tiarra's socket");
+            }
+
+            fwrite($this->_socket_resource,
+                sprintf(
+                    Net_Socket_Tiarra::request_template, // template
+
+                    Net_Socket_Tiarra::protocol,
+                    Net_Socket_Tiarra::sender,
+                    ($use_notice ? 'yes' : 'no'),
+                    $channel,
+                    $this->getOption('charset'),
+                    $t
+                )
+            );
+
+            $response = fgets($this->_socket_resource, 128);
+            if(!preg_match('@^' . preg_quote(Net_Socket_Tiarra::protocol, '@') . ' 200 OK@', $response)) {
+                throw new Net_Socket_Tiarra_Exception("error: " . $response);
+            };
+
+            fclose($this->_socket_resource);
         }
-
-        fwrite($this->_socket_resource,
-            sprintf(
-                Net_Socket_Tiarra::request_template, // template
-
-                Net_Socket_Tiarra::protocol,
-                Net_Socket_Tiarra::sender,
-                ($use_notice ? 'yes' : 'no'),
-                $channel,
-                $this->getOption('charset'),
-                $text
-            )
-        );
-
-        $response = fgets($this->_socket_resource, 128);
-        if(!preg_match('@^' . preg_quote(Net_Socket_Tiarra::protocol, '@') . ' 200 OK@', $response)) {
-            throw new Net_Socket_Tiarra_Exception("error: " . $response);
-        };
-
-        fclose($this->_socket_resource);
     }
 
     /**
@@ -198,12 +200,34 @@ Text: %s\r
      *
      * @param  string  $channel Parameter
      * @param  string  $text    Parameter
-     * @return void   
-     * @access public 
+     * @return void
+     * @access public
      */
     public function noticeMessage($channel, $text)
     {
         $this->message($channel, $text, true);
+    }
+
+    /**
+     * strSplit
+     *
+     * @param  string  $text    Parameter
+     * @param  int     $count   Parameter
+     * @return array
+     */
+    public function strSplit($text, $count)
+    {
+        $result = array();
+        $start = 0;
+        while(1) {
+            $substr = mb_substr($text, $start, $count, $this->getOption('charset'));
+            $result[] = $substr;
+            if (mb_strlen($substr, $this->getOption('charset')) < $count) {
+                break;
+            }
+            $start += $count;
+        }
+        return $result;
     }
 }
 
