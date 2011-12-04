@@ -7,8 +7,11 @@ Send message to IRC via Tiarra socket.
 Install
 ----------
 
-  $ pear channel-discover openpear.org
-  $ pear install openpear/Net_Socket_Tiarra
+Install via openpear.
+
+      $ pear channel-discover openpear.org
+      $ pear install openpear/Net_Socket_Tiarra
+
 
 Example
 ----------
@@ -40,9 +43,11 @@ Tiarra setting:
 
 ```
 control-socket-name: socketname
+```
 
-~~~~
+And
 
+```
 + System::SendMessage {
 }
 ```
