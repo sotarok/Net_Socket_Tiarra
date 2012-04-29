@@ -167,6 +167,9 @@ Text: %s\r
     public function message($channel, $text, $use_notice = false)
     {
         foreach ($this->strSplit($text, 430) as $k => $t) {
+            if (empty($t)) {
+                continue;
+            }
             $this->_socket_resource = fsockopen("unix:///tmp/tiarra-control/" . $this->_socket_name);
 
             if (!$this->_socket_resource) {
