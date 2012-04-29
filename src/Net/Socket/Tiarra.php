@@ -167,6 +167,9 @@ Text: %s\r
     public function message($channel, $text, $use_notice = false)
     {
         foreach ($this->strSplit($text, 430) as $k => $t) {
+            if (empty($t)) {
+                continue;
+            }
             $this->_socket_resource = fsockopen("unix:///tmp/tiarra-control/" . $this->_socket_name);
 
             if (!$this->_socket_resource) {
@@ -222,7 +225,7 @@ Text: %s\r
         while(1) {
             $substr = mb_substr($text, $start, $count, $this->getOption('charset'));
             $result[] = $substr;
-            if (mb_strlen($substr, $this->getOption('charset')) < $count) {
+            if (mb_strlen($substr, $this->getOption('charset')) <= $count) {
                 break;
             }
             $start += $count;
