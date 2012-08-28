@@ -225,7 +225,7 @@ Text: %s\r
         while(1) {
             $substr = mb_substr($text, $start, $count, $this->getOption('charset'));
             $result[] = $substr;
-            if (mb_strlen($substr, $this->getOption('charset')) <= $count) {
+            if (mb_strlen($substr, $this->getOption('charset')) < $count) {
                 break;
             }
             $start += $count;
